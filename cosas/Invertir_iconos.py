@@ -17,4 +17,4 @@ def invertir_colores_png(input_path, output_path):
     imagen_invertida.save(output_path, format="PNG")
 
 # Ejemplo de uso
-invertir_colores_png("iconos/desplazarse.png", "iconos/desplazarse_inv.png")
+invertir_colores_png("../iconos/desplazarse.png", "iconos/desplazarse_inv.png")
