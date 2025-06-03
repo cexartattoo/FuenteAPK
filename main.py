@@ -1,6 +1,7 @@
 
 
 from plyer import filechooser
+
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
@@ -258,19 +259,17 @@ class FuenteControlApp(App):
                 "• Verifica que el servidor esté corriendo en la Raspberry.\n"
             ))
 
+    from plyer import filechooser
+
     def seleccionar_imagen(self, instance):
-        filechooser.open_file(
-            filters=[("Image files", "*.jpg;*.png;*.jpeg")],
-            on_selection=self.agregar_elemento_personalizado
-        )
+        filechooser.open_file(on_selection=self.agregar_elemento_personalizado)
 
     def agregar_elemento_personalizado(self, seleccion):
         if seleccion and len(seleccion) > 0:
-            ruta = seleccion[0]  # Solo tomamos la primera imagen seleccionada
+            ruta = seleccion[0]
             self.lista.add_widget(Elemento(tipo=ruta))
         else:
             print("No se seleccionó ninguna imagen.")
-
 
     def mostrar_error(self, titulo, mensaje):
         contenido = BoxLayout(orientation='vertical')
