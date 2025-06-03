@@ -21,6 +21,15 @@ from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 
+from android.permissions import request_permissions, Permission
+
+def pedir_permisos():
+    request_permissions([
+        Permission.READ_EXTERNAL_STORAGE,
+        Permission.WRITE_EXTERNAL_STORAGE
+    ])
+
+
 def mostrar_popup(titulo, mensaje):
     box = BoxLayout(orientation='vertical', padding=10, spacing=10)
     box.add_widget(Label(text=mensaje))
@@ -79,6 +88,7 @@ class Elemento(FloatLayout):
         self.contenido.add_widget(self.drag_handle)
 
         self.long_press_trigger = None
+        pedir_permisos()
 
     def verificar_presion(self, instance, touch):
         if instance.collide_point(*touch.pos):
