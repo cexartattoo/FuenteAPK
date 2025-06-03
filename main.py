@@ -28,6 +28,25 @@ from kivy.clock import Clock
 from kivy.properties import BooleanProperty, NumericProperty
 import os
 
+from kivy.uix.popup import Popup
+from kivy.uix.label import Label
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+
+def mostrar_popup(titulo, mensaje):
+    box = BoxLayout(orientation='vertical', padding=10, spacing=10)
+    box.add_widget(Label(text=mensaje))
+
+    btn_cerrar = Button(text='Cerrar', size_hint=(1, 0.3))
+    box.add_widget(btn_cerrar)
+
+    popup = Popup(title=titulo, content=box,
+                  size_hint=(None, None), size=(300, 200),
+                  auto_dismiss=False)
+    btn_cerrar.bind(on_press=popup.dismiss)
+    popup.open()
+
+
 class Elemento(FloatLayout):
     dragging = BooleanProperty(False)
 
@@ -267,9 +286,12 @@ class FuenteControlApp(App):
     def agregar_elemento_personalizado(self, seleccion):
         if seleccion and len(seleccion) > 0:
             ruta = seleccion[0]
+            mostrar_popup("Imagen seleccionada", ruta)
+
             self.lista.add_widget(Elemento(tipo=ruta))
         else:
-            print("No se seleccionó ninguna imagen.")
+            mostrar_popup("error", ruta)
+
 
     def mostrar_error(self, titulo, mensaje):
         contenido = BoxLayout(orientation='vertical')
