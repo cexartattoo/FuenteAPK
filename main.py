@@ -48,7 +48,7 @@ class Elemento(FloatLayout):
         self.contenido = BoxLayout(orientation='horizontal', size_hint=(1, 1), pos_hint={'x': 0, 'y': 0})
         self.add_widget(self.contenido)
 
-        # Icono
+        # Iconox
         if os.path.isfile(tipo):
             self.icono = Image(source=tipo, size_hint=(0.2, 1))
         else:
