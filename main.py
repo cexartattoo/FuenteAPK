@@ -1,4 +1,9 @@
-
+'''
+from kivy.config import Config
+Config.set('graphics', 'width', '360')
+Config.set('graphics', 'height', '640')
+Config.set('graphics', 'resizable', False)
+'''
 
 from plyer import filechooser
 
@@ -21,13 +26,58 @@ from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 
-from android.permissions import request_permissions, Permission
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from android.permissions import request_permissions, check_permission, Permission
+from jnius import autoclass
 
-def pedir_permisos():
-    request_permissions([
-        Permission.READ_EXTERNAL_STORAGE,
-        Permission.WRITE_EXTERNAL_STORAGE
-    ])
+# Para mostrar Toasts
+PythonActivity = autoclass('org.kivy.android.PythonActivity')
+Toast = autoclass('android.widget.Toast')
+
+class MainWidget(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.orientation = 'vertical'
+
+        self.boton_verificar = Button(text="Verificar permisos")
+        self.boton_verificar.bind(on_press=self.verificar_permisos)
+        self.add_widget(self.boton_verificar)
+
+        self.boton_reintentar = Button(text="Volver a pedir permisos", disabled=True)
+        self.boton_reintentar.bind(on_press=self.pedir_permisos)
+        self.add_widget(self.boton_reintentar)
+
+    def mostrar_toast(self, mensaje):
+        Toast.makeText(PythonActivity.mActivity, mensaje, Toast.LENGTH_LONG).show()
+
+    def verificar_permisos(self, instance):
+        if check_permission(Permission.READ_EXTERNAL_STORAGE):
+            self.mostrar_toast("✅ Permisos otorgados")
+            self.boton_reintentar.disabled = True
+        else:
+            self.mostrar_toast("❌ Permisos denegados. Debes aceptarlos.")
+            self.boton_reintentar.disabled = False
+
+    def pedir_permisos(self, instance=None):
+        request_permissions(
+            [Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE],
+            self.callback_permiso
+        )
+
+    def callback_permiso(self, permisos, resultados):
+        if all(resultados):
+            self.mostrar_toast("✅ Permisos aceptados")
+            self.boton_reintentar.disabled = True
+        else:
+            self.mostrar_toast("❌ Aún no se otorgaron permisos")
+            self.boton_reintentar.disabled = False
+
+class PermisoApp(App):
+    def build(self):
+        return MainWidget()
+
 
 
 def mostrar_popup(titulo, mensaje):
@@ -88,7 +138,7 @@ class Elemento(FloatLayout):
         self.contenido.add_widget(self.drag_handle)
 
         self.long_press_trigger = None
-        pedir_permisos()
+        #pedir_permisos()
 
     def verificar_presion(self, instance, touch):
         if instance.collide_point(*touch.pos):
@@ -169,6 +219,8 @@ class Elemento(FloatLayout):
 
 
 
+
+
 class FuenteControlApp(App):
     def build(self):
         root = BoxLayout(orientation='vertical')
@@ -181,7 +233,7 @@ class FuenteControlApp(App):
 
         root.add_widget(scroll)
 
-        botones = BoxLayout(size_hint=(1, 0.2), padding=10)
+        botones = BoxLayout(size_hint=(1, 0.1), padding=10)
 
         def crear_boton(ruta_icono, accion):
             btn = Button(
@@ -207,7 +259,13 @@ class FuenteControlApp(App):
         botones.add_widget(crear_boton('iconos/enviar_inv.png', self.enviar_configuracion))
         botones.add_widget(Widget())  # Espacio al final
 
+
+
         root.add_widget(botones)
+
+
+
+
 
         return root
 
@@ -305,4 +363,5 @@ class FuenteControlApp(App):
 
 
 if __name__ == "__main__":
+    PermisoApp().run()
     FuenteControlApp().run()

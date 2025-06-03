@@ -1,54 +1,68 @@
+from kivy.config import Config
+Config.set('graphics', 'width', '360')
+Config.set('graphics', 'height', '640')
+
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
 from kivy.uix.button import Button
-from android.permissions import request_permissions, check_permission, Permission
-from jnius import autoclass
+from kivy.uix.popup import Popup
 
-# Para mostrar Toasts
-PythonActivity = autoclass('org.kivy.android.PythonActivity')
-Toast = autoclass('android.widget.Toast')
 
-class MainWidget(BoxLayout):
+class BarraSuperior(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.orientation = 'vertical'
+        self.orientation = 'horizontal'
+        self.size_hint_y = None
+        self.height = 50
+        self.padding = 10
+        self.spacing = 10
 
-        self.boton_verificar = Button(text="Verificar permisos")
-        self.boton_verificar.bind(on_press=self.verificar_permisos)
-        self.add_widget(self.boton_verificar)
-
-        self.boton_reintentar = Button(text="Volver a pedir permisos", disabled=True)
-        self.boton_reintentar.bind(on_press=self.pedir_permisos)
-        self.add_widget(self.boton_reintentar)
-
-    def mostrar_toast(self, mensaje):
-        Toast.makeText(PythonActivity.mActivity, mensaje, Toast.LENGTH_LONG).show()
-
-    def verificar_permisos(self, instance):
-        if check_permission(Permission.READ_EXTERNAL_STORAGE):
-            self.mostrar_toast("✅ Permisos otorgados")
-            self.boton_reintentar.disabled = True
-        else:
-            self.mostrar_toast("❌ Permisos denegados. Debes aceptarlos.")
-            self.boton_reintentar.disabled = False
-
-    def pedir_permisos(self, instance=None):
-        request_permissions(
-            [Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE],
-            self.callback_permiso
+        titulo = Label(
+            text="Mi Aplicación",
+            font_size=18,
+            size_hint_x=0.9,
+            color=(1, 1, 1, 1)
         )
 
-    def callback_permiso(self, permisos, resultados):
-        if all(resultados):
-            self.mostrar_toast("✅ Permisos aceptados")
-            self.boton_reintentar.disabled = True
-        else:
-            self.mostrar_toast("❌ Aún no se otorgaron permisos")
-            self.boton_reintentar.disabled = False
+        boton_info = Button(
+            text="ℹ️",
+            size_hint_x=0.1
+        )
+        boton_info.bind(on_press=self.mostrar_info)
 
-class PermisoApp(App):
+        self.add_widget(titulo)
+        self.add_widget(boton_info)
+
+    def mostrar_info(self, instance):
+        contenido = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        contenido.add_widget(Label(
+            text="Mi Aplicación v1.0\n\nDesarrollado por Ramiro\n© 2025 Todos los derechos reservados",
+            halign='center'
+        ))
+
+        btn_cerrar = Button(text="Cerrar", size_hint_y=None, height=40)
+        popup = Popup(title="Información", content=contenido,
+                      size_hint=(None, None), size=(300, 300),
+                      auto_dismiss=False)
+
+        btn_cerrar.bind(on_press=popup.dismiss)
+        contenido.add_widget(btn_cerrar)
+        popup.open()
+
+
+class MiApp(App):
     def build(self):
-        return MainWidget()
+        layout = BoxLayout(orientation='vertical')
+
+        barra = BarraSuperior()
+        layout.add_widget(barra)
+
+        # Aquí iría el resto de tu contenido principal:
+        layout.add_widget(Label(text="Contenido principal", font_size=16))
+
+        return layout
+
 
 if __name__ == '__main__':
-    PermisoApp().run()
+    MiApp().run()
