@@ -2,30 +2,18 @@
 
 from plyer import filechooser
 
-from kivy.uix.label import Label
 from kivy.uix.widget import Widget
-from kivy.clock import Clock
 
 from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.image import Image
-from kivy.uix.textinput import TextInput
-from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.popup import Popup
 import requests
 import threading
-import os
-
-
-from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import Image
 from kivy.uix.textinput import TextInput
-from kivy.uix.button import Button
 from kivy.clock import Clock
-from kivy.properties import BooleanProperty, NumericProperty
+from kivy.properties import BooleanProperty
 import os
 
 from kivy.uix.popup import Popup
@@ -64,7 +52,7 @@ class Elemento(FloatLayout):
         self.eliminar_btn.bind(on_press=self.eliminar)
         self.add_widget(self.eliminar_btn)
 
-        # Contenido: todo el contenido visible del elemento, que será desplazable
+
         self.contenido = BoxLayout(orientation='horizontal', size_hint=(1, 1), pos_hint={'x': 0, 'y': 0})
         self.add_widget(self.contenido)
 
@@ -278,22 +266,23 @@ class FuenteControlApp(App):
                 "• Verifica que el servidor esté corriendo en la Raspberry.\n"
             ))
 
-    from plyer import filechooser
+
 
     def seleccionar_imagen(self, instance):
         filechooser.open_file(on_selection=self.agregar_elemento_personalizado)
 
     def agregar_elemento_personalizado(self, seleccion):
+        ruta = seleccion[0]
         if seleccion and len(seleccion) > 0:
-            ruta = seleccion[0]
+
             mostrar_popup("Imagen seleccionada", ruta)
 
             self.lista.add_widget(Elemento(tipo=ruta))
         else:
             mostrar_popup("error", ruta)
 
-
-    def mostrar_error(self, titulo, mensaje):
+    @staticmethod
+    def mostrar_error(titulo, mensaje):
         contenido = BoxLayout(orientation='vertical')
         contenido.add_widget(Label(text=mensaje))
 
