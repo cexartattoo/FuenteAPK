@@ -50,6 +50,7 @@ requirements = python3,kivy,plyer
 icon.filename = iconos/fuente.png
 
 
+
 # (list) Supported orientations
 # Valid options are: landscape, portrait, portrait-reverse or landscape-reverse
 orientation = portrait
