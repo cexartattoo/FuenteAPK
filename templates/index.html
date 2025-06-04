@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Fuente</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Control de Fuente</h1>
+        </div>
+
+        <div class="lista-elementos" id="listaElementos">
+            <!-- Los elementos se agregan aquí dinámicamente -->
+        </div>
+
+        <div class="botones-principales">
+            <button class="boton-accion" onclick="seleccionarImagen()">
+                <span class="icono">🖼️</span>
+            </button>
+            <button class="boton-accion" onclick="agregarElemento('reloj')">
+                <span class="icono">🕐</span>
+            </button>
+            <button class="boton-accion" onclick="agregarElemento('fecha')">
+                <span class="icono">📅</span>
+            </button>
+            <button class="boton-accion boton-enviar" onclick="enviarConfiguracion()">
+                <span class="icono">📤</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Input oculto para selección de archivos -->
+    <input type="file" id="inputImagen" accept="image/*" style="display: none;" onchange="procesarImagen(this)">
+
+    <!-- Modal para mensajes -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModal()">&times;</span>
+            <h3 id="modalTitulo"></h3>
+            <p id="modalMensaje"></p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

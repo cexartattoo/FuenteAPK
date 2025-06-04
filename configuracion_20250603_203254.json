@@ -1,0 +1,20 @@
+[
+  {
+    "tipo": "imagen",
+    "imagen_nombre": "imagen_1749000774842",
+    "tiempo": "1",
+    "repeticiones": "1"
+  },
+  {
+    "tipo": "reloj",
+    "imagen_nombre": null,
+    "tiempo": "1",
+    "repeticiones": "1"
+  },
+  {
+    "tipo": "fecha",
+    "imagen_nombre": null,
+    "tiempo": "1",
+    "repeticiones": "1"
+  }
+]
