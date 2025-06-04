@@ -529,6 +529,51 @@
                 font-size: 22px;
             }
         }
+        /* Barra de progreso */
+        .progress-container {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 380px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 20px;
+            z-index: 1500;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .progress-detail {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
 
 
 
@@ -542,7 +587,7 @@
             <div class="logo-left" >
                 🎓
             </div>
-            
+
             <div class="header-center">
                 <div class="logo-universidad" >
                     <img src="{{ url_for('static', filename='iconos/logo_universidad.png') }}" style="height: 50px;">
@@ -623,7 +668,7 @@
         document.addEventListener('click', function(event) {
             const menu = document.getElementById('dropdownMenu');
             const menuBtn = document.querySelector('.menu-btn');
-            
+
             if (!menu.contains(event.target) && !menuBtn.contains(event.target)) {
                 menu.classList.remove('active');
             }
@@ -700,7 +745,7 @@
         // Funciones del menú
         function mostrarAcercaDe() {
             toggleMenu();
-            mostrarMensaje('Acerca de', 
+            mostrarMensaje('Acerca de',
                 'Control de Fuente v2.0\n\n' +
                 'Aplicación web para control de secuencias de visualización.\n\n' +
                 'Desarrollado para Raspberry Pi\n' +
@@ -716,7 +761,7 @@
 
         function mostrarContacto() {
             toggleMenu();
-            mostrarMensaje('Información de Contacto', 
+            mostrarMensaje('Información de Contacto',
                 'Desarrollador: César Ramirez H.\n' +
                 'Email: cesar.ramirez@unipamplona.edu.co\n' +
                 'Teléfono: 3219121216\n\n' +
@@ -799,17 +844,17 @@
         }
 
         // Procesar imagen seleccionada con mejor manejo de errores
+        // Reemplazar la función procesarImagen existente
         function procesarImagen(input) {
             const file = input.files[0];
             if (!file) return;
 
-            // Validaciones adicionales para móviles
+            // Validaciones
             if (file.size > 16 * 1024 * 1024) {
                 mostrarMensaje('Error', 'La imagen es demasiado grande. Máximo 16MB.');
                 return;
             }
 
-            // Tipos de archivo permitidos específicamente para móviles
             const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp'];
             if (!allowedTypes.includes(file.type)) {
                 mostrarMensaje('Error', 'Formato no compatible. Use: JPEG, PNG, GIF, BMP o WebP.');
@@ -818,19 +863,69 @@
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                // Crear elemento con preview de la imagen
-                agregarElemento('imagen', e.target.result);
-                
-                // Subir imagen al servidor
-                subirImagen(file);
+                // Solo crear elemento con preview, NO subir aún
+                agregarElementoConImagen(file, e.target.result);
             };
-            
+
             reader.onerror = function() {
                 mostrarMensaje('Error', 'No se pudo leer la imagen seleccionada.');
             };
-            
+
             reader.readAsDataURL(file);
         }
+
+        // Agregar después de la función procesarImagen
+        function agregarElementoConImagen(file, dataSrc) {
+            const lista = document.getElementById('listaElementos');
+            const elementoId = 'elemento_' + (++elementoIdCounter);
+
+            const elemento = document.createElement('div');
+            elemento.className = 'elemento';
+            elemento.id = elementoId;
+            elemento.setAttribute('data-tipo', 'imagen');
+            elemento.setAttribute('data-imagen-file', ''); // Guardará el archivo
+            elemento.setAttribute('data-imagen-preview', dataSrc);
+
+            // Guardar el archivo en el elemento para subirlo después
+            elemento._imageFile = file;
+
+            elemento.innerHTML = `
+                <div class="elemento-contenido">
+                    <div class="elemento-icono">
+                        <img src="${dataSrc}" alt="Imagen personalizada">
+                    </div>
+                    <div class="elemento-inputs">
+                        <div class="input-grupo">
+                            <label class="input-label">Segundos</label>
+                            <input type="number" class="input-campo tiempo-input" value="1" min="1" max="300">
+                        </div>
+                        <div class="input-grupo">
+                            <label class="input-label">Repeticiones</label>
+                            <input type="number" class="input-campo repeticiones-input" value="1" min="1" max="99">
+                        </div>
+                    </div>
+                    <div class="drag-handle" onmousedown="iniciarDrag(event, '${elementoId}')" ontouchstart="iniciarDrag(event, '${elementoId}')">
+                        ⋮⋮
+                    </div>
+                </div>
+                <button class="boton-eliminar" onclick="eliminarElemento('${elementoId}')">
+                    ✕
+                </button>
+            `;
+
+            // Agregar eventos de swipe
+            elemento.addEventListener('touchstart', iniciarSwipe, { passive: true });
+            elemento.addEventListener('touchmove', moverSwipe, { passive: false });
+            elemento.addEventListener('touchend', terminarSwipe, { passive: true });
+
+            lista.appendChild(elemento);
+            mostrarMensaje('Imagen agregada', 'Imagen lista para enviar con la configuración');
+
+            setTimeout(() => {
+                elemento.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+
 
         // Subir imagen al servidor con mejor manejo de errores
         function subirImagen(file) {
@@ -861,7 +956,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                mostrarMensaje('Error de conexión', 
+                mostrarMensaje('Error de conexión',
                     'No se pudo subir la imagen al servidor.\n\n' +
                     'Posibles causas:\n' +
                     '• Conexión de red inestable\n' +
@@ -1007,115 +1102,195 @@
         }
 
         // Enviar configuración con mejor validación
-        function enviarConfiguracion() {
+        async function enviarConfiguracion() {
             const elementos = document.querySelectorAll('.elemento');
-            const secuencia = [];
 
             if (elementos.length === 0) {
                 mostrarMensaje('Aviso', 'Agrega al menos un elemento antes de enviar la configuración');
                 return;
             }
 
-            elementos.forEach((elemento, index) => {
-                const tipo = elemento.getAttribute('data-tipo');
-                const imagen = elemento.getAttribute('data-imagen');
-                const tiempoInput = elemento.querySelector('.tiempo-input');
-                const repeticionesInput = elemento.querySelector('.repeticiones-input');
-                
-                const tiempo = parseInt(tiempoInput.value) || 1;
-                const repeticiones = parseInt(repeticionesInput.value) || 1;
+            // Mostrar barra de progreso
+            mostrarBarraProgreso();
 
-                // Validaciones
-                if (tiempo < 1 || tiempo > 300) {
-                    mostrarMensaje('Error de validación', `Elemento ${index + 1}: El tiempo debe estar entre 1 y 300 segundos`);
-                    return;
-                }
-                
-                if (repeticiones < 1 || repeticiones > 99) {
-                    mostrarMensaje('Error de validación', `Elemento ${index + 1}: Las repeticiones deben estar entre 1 y 99`);
-                    return;
-                }
-
-                secuencia.push({
-                    tipo: tipo,
-                    imagen_nombre: imagen ? 'imagen_' + Date.now() + '_' + index : null,
-                    tiempo: tiempo.toString(),
-                    repeticiones: repeticiones.toString(),
-                    orden: index + 1
-                });
-            });
-
-            if (secuencia.length === 0) return;
-
-            // Mostrar indicador de carga
+            // Deshabilitar botón enviar
             const botonEnviar = document.querySelector('.boton-enviar');
             const iconoOriginal = botonEnviar.innerHTML;
             botonEnviar.innerHTML = '<span class="icono">⏳</span>';
             botonEnviar.disabled = true;
             botonEnviar.style.opacity = '0.6';
 
-            // Enviar configuración
-            fetch('/configuracion', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(secuencia)
-            })
-            .then(response => {
+            try {
+                // Paso 1: Limpiar imágenes anteriores
+                actualizarProgreso(5, 'Limpiando imágenes anteriores...');
+                await limpiarImagenesAnteriores();
+
+                // Paso 2: Subir nuevas imágenes
+                const elementosConImagen = Array.from(elementos).filter(el =>
+                    el.getAttribute('data-tipo') === 'imagen' && el._imageFile
+                );
+
+                let imagenIndex = 0;
+                for (const elemento of elementosConImagen) {
+                    imagenIndex++;
+                    const progreso = 10 + (imagenIndex * 40 / elementosConImagen.length);
+                    actualizarProgreso(progreso, `Subiendo imagen ${imagenIndex} de ${elementosConImagen.length}...`);
+
+                    const filename = await subirImagenSync(elemento._imageFile);
+                    elemento.setAttribute('data-imagen-file', filename);
+                }
+
+                // Paso 3: Preparar configuración
+                actualizarProgreso(60, 'Preparando configuración...');
+                const secuencia = [];
+
+                elementos.forEach((elemento, index) => {
+                    const tipo = elemento.getAttribute('data-tipo');
+                    const imagenFile = elemento.getAttribute('data-imagen-file');
+                    const tiempoInput = elemento.querySelector('.tiempo-input');
+                    const repeticionesInput = elemento.querySelector('.repeticiones-input');
+
+                    const tiempo = parseInt(tiempoInput.value) || 1;
+                    const repeticiones = parseInt(repeticionesInput.value) || 1;
+
+                    // Validaciones
+                    if (tiempo < 1 || tiempo > 300) {
+                        throw new Error(`Elemento ${index + 1}: El tiempo debe estar entre 1 y 300 segundos`);
+                    }
+
+                    if (repeticiones < 1 || repeticiones > 99) {
+                        throw new Error(`Elemento ${index + 1}: Las repeticiones deben estar entre 1 y 99`);
+                    }
+
+                    secuencia.push({
+                        tipo: tipo,
+                        imagen_nombre: imagenFile || null,
+                        tiempo: tiempo.toString(),
+                        repeticiones: repeticiones.toString(),
+                        orden: index + 1
+                    });
+                });
+
+                // Paso 4: Enviar configuración
+                actualizarProgreso(80, 'Enviando configuración...');
+
+                const response = await fetch('/configuracion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(secuencia)
+                });
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                return response.json();
-            })
-            .then(data => {
+
+                const data = await response.json();
+
                 if (data.success) {
-                    mostrarMensaje('✅ Configuración Enviada', 
-                        `Se procesaron ${data.elementos} elementos correctamente.\n\n` +
-                        'La secuencia ha sido enviada a la Raspberry Pi y está lista para ejecutarse.'
-                    );
+                    actualizarProgreso(100, 'Configuración enviada exitosamente');
+                    setTimeout(() => {
+                        ocultarBarraProgreso();
+                        mostrarMensaje('✅ Configuración Enviada',
+                            `Se procesaron ${data.elementos} elementos correctamente.\n\n` +
+                            'La secuencia ha sido enviada a la Raspberry Pi y está lista para ejecutarse.'
+                        );
+                    }, 1000);
                 } else {
-                    mostrarMensaje('Error del servidor', 'Error al procesar configuración: ' + (data.error || 'Error desconocido'));
+                    throw new Error('Error del servidor: ' + (data.error || 'Error desconocido'));
                 }
-            })
-            .catch(error => {
+
+            } catch (error) {
                 console.error('Error:', error);
-                mostrarMensaje('❌ Error de Conexión', 
-                    'No se pudo conectar con la Raspberry Pi.\n\n' +
-                    'Verifica que:\n' +
-                    '• La Raspberry esté encendida\n' +
-                    '• Estés conectado a la misma red Wi-Fi\n' +
-                    '• El servidor Flask esté ejecutándose\n' +
-                    '• No haya problemas de firewall\n\n' +
-                    'Intenta nuevamente en unos segundos.'
-                );
-            })
-            .finally(() => {
+                ocultarBarraProgreso();
+                mostrarMensaje('❌ Error', error.message || 'Error desconocido');
+            } finally {
                 // Restaurar botón
                 botonEnviar.innerHTML = iconoOriginal;
                 botonEnviar.disabled = false;
                 botonEnviar.style.opacity = '1';
-            });
-        }
-
-        // Sistema de modales mejorado
-        function mostrarMensaje(titulo, mensaje) {
-            document.getElementById('modalTitulo').textContent = titulo;
-            document.getElementById('modalMensaje').style.whiteSpace = 'pre-line';
-            document.getElementById('modalMensaje').textContent = mensaje;
-            document.getElementById('modal').style.display = 'block';
-            
-            // Auto-cerrar después de 5 segundos para mensajes de éxito
-            if (titulo.includes('✅') || titulo.includes('Éxito')) {
-                setTimeout(() => {
-                    cerrarModal();
-                }, 5000);
             }
         }
 
         function cerrarModal() {
             document.getElementById('modal').style.display = 'none';
+        }
+        // Agregar estas funciones al final del script
+
+        function mostrarBarraProgreso() {
+            // Crear elemento de progreso si no existe
+            let progressContainer = document.getElementById('progressContainer');
+            if (!progressContainer) {
+                progressContainer = document.createElement('div');
+                progressContainer.id = 'progressContainer';
+                progressContainer.className = 'progress-container';
+                progressContainer.innerHTML = `
+                    <div class="progress-text">Enviando configuración...</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-detail" id="progressDetail">Iniciando...</div>
+                `;
+                document.body.appendChild(progressContainer);
+            }
+            progressContainer.style.display = 'block';
+        }
+
+        function actualizarProgreso(porcentaje, mensaje) {
+            const progressFill = document.getElementById('progressFill');
+            const progressDetail = document.getElementById('progressDetail');
+
+            if (progressFill) progressFill.style.width = porcentaje + '%';
+            if (progressDetail) progressDetail.textContent = mensaje;
+        }
+
+        function ocultarBarraProgreso() {
+            const progressContainer = document.getElementById('progressContainer');
+            if (progressContainer) {
+                progressContainer.style.display = 'none';
+            }
+        }
+
+        async function limpiarImagenesAnteriores() {
+            const response = await fetch('/limpiar-imagenes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al limpiar imágenes anteriores');
+            }
+
+            return response.json();
+        }
+
+        async function subirImagenSync(file) {
+            const formData = new FormData();
+            formData.append('imagen', file);
+
+            const response = await fetch('/subir-imagen', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error al subir imagen: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || 'Error desconocido al subir imagen');
+            }
+
+            return data.filename;
         }
 
         // Cerrar modal al hacer clic fuera
@@ -1141,10 +1316,23 @@
 
         // Mejorar la funcionalidad de los logos
 
+        // Sistema de modales mejorado
+        function mostrarMensaje(titulo, mensaje) {
+            document.getElementById('modalTitulo').textContent = titulo;
+            document.getElementById('modalMensaje').style.whiteSpace = 'pre-line';
+            document.getElementById('modalMensaje').textContent = mensaje;
+            document.getElementById('modal').style.display = 'block';
 
+            // Auto-cerrar después de 5 segundos para mensajes de éxito
+            if (titulo.includes('✅') || titulo.includes('Éxito')) {
+                setTimeout(() => {
+                    cerrarModal();
+                }, 5000);
+            }
+        }
         // Mensaje de bienvenida
         setTimeout(() => {
-            mostrarMensaje('🎉 Bienvenido', 
+            mostrarMensaje('🎉 Bienvenido',
                 'Control de Fuente v2.0\n\n' +
                 '• Toca los logos para cambiarlos\n' +
                 '• Arrastra elementos para reordenar\n' +

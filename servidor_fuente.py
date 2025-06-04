@@ -96,51 +96,41 @@ def subir_imagen():
 
 @app.route('/configuracion', methods=['POST'])
 def recibir_configuracion():
-    global primera_imagen_sesion
+    # Remover esta línea: primera_imagen_sesion = True
+
     try:
         secuencia = request.get_json()
 
-        # Resetear la bandera para la próxima sesión
-        primera_imagen_sesion = True
-
-        # Procesar la secuencia para manejar nombres de archivo de imágenes
+        # El resto del código permanece igual...
         secuencia_procesada = []
 
         for elemento in secuencia:
             elemento_procesado = elemento.copy()
 
-            # Si el elemento es de tipo imagen y tiene imagen_nombre
             if (elemento.get('tipo') == 'imagen' and
                     'imagen_nombre' in elemento and
                     elemento['imagen_nombre']):
 
-                # Buscar el archivo en uploads que coincida
-                imagen_nombre = elemento['imagen_nombre']
                 archivo_encontrado = None
-
-                # Buscar archivos en uploads
                 for archivo in os.listdir(UPLOAD_FOLDER):
                     if os.path.isfile(os.path.join(UPLOAD_FOLDER, archivo)):
-                        archivo_encontrado = archivo
-                        break
+                        if archivo == elemento['imagen_nombre']:
+                            archivo_encontrado = archivo
+                            break
 
                 if archivo_encontrado:
                     elemento_procesado['archivo'] = archivo_encontrado
-                    print(f"Imagen {imagen_nombre} asociada con archivo {archivo_encontrado}")
+                    print(f"Imagen {elemento['imagen_nombre']} encontrada: {archivo_encontrado}")
                 else:
-                    print(f"Advertencia: No se encontró archivo para imagen {imagen_nombre}")
+                    print(f"Advertencia: No se encontró archivo para imagen {elemento['imagen_nombre']}")
                     elemento_procesado['archivo'] = None
 
             secuencia_procesada.append(elemento_procesado)
 
-        # Guardar configuración actual (sobrescribir la anterior)
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
             json.dump(secuencia_procesada, f, indent=2, ensure_ascii=False)
 
         print("Configuración recibida y procesada:", secuencia_procesada)
-
-        # Aquí puedes agregar la lógica para procesar la secuencia
-        # Por ejemplo, controlar GPIO, mostrar en pantalla, etc.
 
         return jsonify({
             'success': True,
@@ -150,7 +140,6 @@ def recibir_configuracion():
     except Exception as e:
         print(f"Error en configuración: {e}")
         return jsonify({'success': False, 'error': str(e)})
-
 
 @app.route('/configuracion', methods=['GET'])
 def obtener_configuracion():
@@ -227,6 +216,19 @@ def obtener_estado():
             'config_exists': config_exists,
             'config_info': config_info,
             'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@app.route('/limpiar-imagenes', methods=['POST'])
+def limpiar_imagenes():
+    """Endpoint para limpiar solo las imágenes sin afectar la configuración"""
+    try:
+        limpiar_uploads()
+        return jsonify({
+            'success': True,
+            'message': 'Imágenes anteriores eliminadas exitosamente'
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
